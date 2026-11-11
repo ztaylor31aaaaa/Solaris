@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffc928"><title>Solaris</title><link rel="stylesheet" href="./style.css"><script src="./config.js"><script src="./app.js" defer defer></script></head>
+<body><div class="layout" id="app-layout">
+<aside class="sidebar"><a class="brand" href="#home"><span>solaris</span></a><p class="nav-caption">YOUR SPACE</p><button class="nav-link active" data-view="home" data-label="Home"><span>⌂</span> Home</button><button class="nav-link" data-view="search" data-label="Web search"><span>⌕</span> Web search</button><button class="nav-link" data-view="games" data-label="Discover games"><span>⌕</span> Discover games <b id="game-count">—</b></button><button class="nav-link" data-view="my-library" data-label="My library"><span>▦</span> My library</button><button class="nav-link" data-view="favourites" data-label="Favourites"><span>☆</span> Favourites</button><button class="nav-link" data-view="recent" data-label="Recently played"><span>◷</span> Recently played</button><button class="nav-link" data-view="ai" data-label="AI assistant"><span>✧</span> AI assistant</button><button class="nav-link" data-view="changelog" data-label="Beta changelog"><span>▤</span> Beta changelog</button><button class="nav-link" data-view="bug-report" data-label="Feedback"><span>✉</span> Feedback</button><div class="running-games"><p class="nav-caption">RUNNING GAMES</p><div id="running-game-tabs"></div></div><div class="sidebar-spacer"></div><p class="nav-caption">SYSTEM</p><button class="nav-link" data-view="settings" data-label="Solaris options"><span>⚙</span> Solaris options</button><button class="nav-link" data-action="fullscreen-app" data-label="Fullscreen app"><span>⛶</span> Fullscreen app</button><div class="sidebar-foot"><span class="online-dot"></span> Solaris ready</div></aside>
+<main class="main"><header class="topbar"><div><span class="crumb">SOLARIS</span><span class="crumb-sep">/</span><strong id="view-name">Home</strong></div><div class="top-actions"><span id="catalogue-status" class="status-label">Offline mode</span><span class="online-count" aria-label="Online users">[] online</span><button class="theme-switch topbar-theme-switch" type="button" role="switch" aria-label="Dark mode" aria-checked="true" data-action="theme-toggle"><span class="theme-switch-track"><span class="theme-switch-thumb"></span></span><span class="theme-switch-label">Dark</span></button><button id="update-indicator" class="update-indicator" type="button" title="Checking for updates">Checking…</button></div></header><div class="wiki-tabbar" id="wiki-tabbar" hidden><div class="wiki-tabs" id="wiki-tabs"></div><button class="wiki-new-tab" type="button" data-action="wiki-new-tab">＋ Search</button></div><div class="page" id="page"></div><section id="player-shell" class="player-shell" hidden><header class="player-bar"><div class="player-title-wrap"><span class="live-dot"></span><strong id="player-title">Game</strong><span id="player-time" class="player-time">00:00</span></div><div class="player-actions"><button class="player-btn" data-action="player-minimise" title="Back to pages">—</button><button class="player-btn" data-action="player-fullscreen" title="Fullscreen">⛶</button><button class="player-btn" data-action="player-reload" title="Reload">↻</button><button class="player-btn close" data-action="player-close" title="Close">×</button></div></header><div class="player-stage" id="player-stage"></div><div class="miniplayer-label">GAME PAUSED IN MINI VIEW · RESTORE TO CONTINUE</div></section></main></div>
+
+<div class="modal-layer" id="modal-layer" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-header"><span class="brand-icon">☀</span><button class="icon-close" data-action="close-modal">×</button></div><div id="modal-body"></div><div id="modal-footer" class="modal-footer"></div></section></div><div id="toast-stack" class="toast-stack" aria-live="polite"></div><script>
+(()=> {
+  const views = {
+    home: ["Home", "Welcome to Solaris", "The main application has not finished starting."],
+    games: ["Discover games", "Game catalogue unavailable", "The Snubby catalogue may be offline (503). This should not prevent the rest of Solaris from loading."],
+    "my-library": ["My library", "Your library", "The library view is unavailable until the main application starts."],
+    favourites: ["Favourites", "Your favourites", "The favourites view is unavailable until the main application starts."],
+    recent: ["Recently played", "Recent games", "The recent-games view is unavailable until the main application starts."],
+    "avatar-market": ["Avatar market", "Avatar market", "The marketplace is unavailable until the main application starts."],
+    ai: ["AI assistant", "AI workspace", "The AI workspace is unavailable until the main application starts."],
+    settings: ["Personalise", "Settings", "The settings view is unavailable until the main application starts."]
+  };
+  let failure = "";
+  function recover() {
+    if (window.__sunsetBooted) return;
+    const page = document.getElementById("page");
+    const title = document.getElementById("view-name");
+    if (!page || !title) return;
+    const item = views.home;
+    title.textContent = item[0];
+    page.hidden = false;
+    page.innerHTML = '<div class="page-heading"><div><p class="kicker">SOLARIS RECOVERY</p><h1>' + item[1] + '</h1><p>' + item[2] + '</p></div></div><section class="settings-card"><h2>Startup diagnostic</h2><p>The app script did not report a successful startup. The issue may be a JavaScript error, blocked browser storage, or an expired sign-in session.</p><p><strong>Diagnostic:</strong> <code id="sunset-error-detail"></code></p><p>Open the browser console (F12 → Console) and check for the first red error if this message does not identify it.</p></section>';
+    const detail = document.getElementById("sunset-error-detail");
+    detail.textContent = failure || "No JavaScript error was captured. The app may have exited early, including because the sign-in token was missing.";
+    document.getElementById("catalogue-status").textContent = "Recovery mode";
+    document.querySelectorAll(".nav-link[data-view]").forEach(b => b.addEventListener("click", () => {
+      const next = views[b.dataset.view] || item;
+      title.textContent = next[0];
+      page.querySelector("h1").textContent = next[1];
+      page.querySelector(".page-heading p:last-child").textContent = next[2];
+      document.querySelectorAll(".nav-link[data-view]").forEach(x => x.classList.toggle("active", x === b));
+    }));
+  }
+  window.addEventListener("error", e => {
+    failure = e.message ? e.message + (e.filename ? " (" + e.filename.split("/").pop() + ":" + e.lineno + ")" : "") : "A script failed to load.";
+    if (!window.__sunsetBooted) recover();
+  }, true);
+  window.addEventListener("unhandledrejection", e => {
+    failure = "Unhandled promise rejection: " + String(e.reason && (e.reason.message || e.reason));
+    if (!window.__sunsetBooted) recover();
+  });
+  setTimeout(recover, 2500);
+})();
+</script></body></html>

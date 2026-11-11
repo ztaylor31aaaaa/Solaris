@@ -1,0 +1,15 @@
+(()=>{"use strict";
+const KEY="sunset_settings";
+const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch{return {}}};
+const write=s=>{try{localStorage.setItem(KEY,JSON.stringify(s))}catch{}};
+const mode=()=>read().theme==="light"?"light":"dark";
+const makeSwitch=()=>{const b=document.createElement("button");b.type="button";b.className="site-theme-switch";b.id="site-theme-toggle";b.setAttribute("role","switch");b.innerHTML='<span class="site-theme-track"><span class="site-theme-thumb"></span></span><span class="site-theme-label">Dark</span>';b.addEventListener("click",toggle);return b};
+const apply=()=>{if(!document.body)return;const m=mode(),dark=m==="dark";document.body.classList.toggle("light",!dark);document.body.classList.toggle("dark",dark);document.body.dataset.theme=m;document.documentElement.dataset.siteTheme=m;document.querySelectorAll(".site-theme-switch").forEach(b=>{b.setAttribute("aria-checked",String(dark));b.setAttribute("aria-label",dark?"Dark mode on. Switch to light mode":"Light mode on. Switch to dark mode");b.title=dark?"Switch to light mode":"Switch to dark mode";const label=b.querySelector(".site-theme-label");if(label)label.textContent=dark?"Dark":"Light"});const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=dark?"#11100d":"#fffaf0"};
+function toggle(){const s=read();s.theme=mode()==="dark"?"light":"dark";write(s);apply()}
+function mount(){if(!document.body)return;let b=document.getElementById("site-theme-toggle");if(!b)b=makeSwitch();const header=document.querySelector(".site-header,.topbar");if(header){if(!header.contains(b))header.append(b)}else{let dock=document.querySelector(".site-theme-dock");if(!dock){dock=document.createElement("div");dock.className="site-theme-dock";document.body.append(dock)}if(!dock.contains(b))dock.append(b)}apply()}
+function addBackToTop(){if(document.getElementById("site-back-top"))return;const b=document.createElement("button");b.id="site-back-top";b.className="site-back-top";b.type="button";b.textContent="↑";b.title="Back to top";b.setAttribute("aria-label","Back to top");b.hidden=true;b.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));document.body.append(b);window.addEventListener("scroll",()=>{b.hidden=window.scrollY<420},{passive:true})}
+document.addEventListener("DOMContentLoaded",()=>{mount();addBackToTop()},{once:true});
+if(document.readyState!=="loading"){mount();addBackToTop()}
+window.addEventListener("storage",e=>{if(e.key===KEY)apply()});
+window.addEventListener("keydown",e=>{const el=e.target,typing=el&&(/INPUT|TEXTAREA|SELECT/.test(el.tagName)||el.isContentEditable);if(e.altKey&&e.key.toLowerCase()==="t"){e.preventDefault();toggle();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();const q=document.querySelector('input[type="search"],#game-search,#home-search,input[placeholder*="Search"]');q?.focus();q?.select();return}if(e.key==="/"&&!typing){const q=document.querySelector('input[type="search"],#game-search,#home-search,input[placeholder*="Search"]');if(q){e.preventDefault();q.focus()}}});
+})();

@@ -1,0 +1,106 @@
+body.light{background:#fffaf0!important;color:#302719!important;color-scheme:light}body.light a{color:#936b12}body.light button,body.light input,body.light select,body.light textarea{color:#302719}body.light input,body.light select,body.light textarea{background:#fffdf8;border-color:#eadfc8}.site-theme-toggle{position:fixed;z-index:99999;right:16px;top:14px;width:38px;height:38px;border:1px solid #8b774d;border-radius:12px;background:#211d16;color:#ffe18a;font-size:17px;cursor:pointer;box-shadow:0 4px 18px #0002}body.light .site-theme-toggle{background:#fffdf8;color:#75500a;border-color:#e4d5b6}
+
+:root{color-scheme:light}
+body.dark{--site-bg:#11100d;--site-surface:#1d1a14;--site-surface-2:#282319;--site-line:#403625;--site-text:#f7f1e6;--site-muted:#b6a98f;color-scheme:dark;background:var(--site-bg)!important;color:var(--site-text)!important}
+body.light{--site-bg:#f7f3ed;--site-surface:#fffdfa;--site-surface-2:#f1e9df;--site-line:#e2d8ce;--site-text:#29232a;--site-muted:#776b73;color-scheme:light;background:var(--site-bg)!important;color:var(--site-text)!important}
+body.dark .site-header,body.dark footer,body.dark .site-footer,body.dark .main-nav{background:#191711!important;color:var(--site-text)!important;border-color:var(--site-line)!important}
+body.dark .site-header a,body.dark .main-nav a,body.dark footer a{color:#eee5d5!important}
+body.dark main,body.dark section,body.dark article,body.dark .lesson-wrap,body.dark .signin-main{color:var(--site-text)}
+body.dark .hero,body.dark .subjects,body.dark .activities,body.dark .about,body.dark .lesson-panel,body.dark .signin-card,body.dark .home-activity-card,body.dark .subject-card,body.dark .activity-card{background:#1d1a14!important;color:var(--site-text)!important;border-color:var(--site-line)!important}
+body.dark p,body.dark li,body.dark label,body.dark .lesson-intro,body.dark .signin-description,body.dark .muted{color:var(--site-muted)}
+body.dark input,body.dark textarea,body.dark select{background:#211e18!important;color:var(--site-text)!important;border-color:var(--site-line)!important}
+body.dark .lesson-example{background:#302817!important;color:#f7e8bf!important;border-color:#c49a23!important}
+body.dark .login-button,body.dark .primary-button,body.dark .signin-submit{color:#261d08!important}
+body.light{background:#f7f3ed!important;color:#29232a!important}
+body.light .site-header,body.light footer,body.light .site-footer{background:#fffdfa!important;color:#29232a!important;border-color:#e2d8ce!important}
+body.light .site-header a,body.light .main-nav a,body.light footer a{color:#40363c}
+body.light .hero,body.light .subjects,body.light .activities,body.light .about,body.light .lesson-panel,body.light .signin-card,body.light .home-activity-card,body.light .subject-card,body.light .activity-card{background:#fffdfa!important;color:#29232a!important;border-color:#e2d8ce!important}
+body.light p,body.light li,body.light label,body.light .lesson-intro,body.light .signin-description{color:#776b73}
+body.light input,body.light textarea,body.light select{background:#fff!important;color:#29232a!important;border-color:#e2d8ce!important}
+body.light .lesson-example{background:#fff4d5!important;color:#463716!important;border-color:#e9ad18!important}
+body.light .login-button,body.light .primary-button,body.light .signin-submit{color:#29200b!important}
+.site-theme-switch{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;border:1px solid #d8cdbd;border-radius:999px;background:#f2ede5;color:#332b25;padding:6px 10px;font:700 12px Arial,sans-serif;cursor:pointer;white-space:nowrap;transition:transform .18s,border-color .18s,background .18s}
+.site-theme-switch:hover{transform:translateY(-1px);border-color:#c49b00}
+.site-theme-track{width:36px;height:20px;border-radius:20px;background:#aaa096;padding:2px;display:inline-flex;align-items:center;transition:background .2s}
+.site-theme-thumb{width:16px;height:16px;border-radius:50%;background:white;box-shadow:0 1px 3px #0004;transition:transform .2s}
+.site-theme-switch[aria-checked="true"] .site-theme-track{background:#d5a900}
+.site-theme-switch[aria-checked="true"] .site-theme-thumb{transform:translateX(16px)}
+.site-theme-label{min-width:30px;text-align:left}
+body.dark .site-theme-switch{background:#242018;color:#f7f1e6;border-color:#4b412e}
+.site-theme-dock{position:fixed;z-index:9999;top:14px;right:14px}
+.site-back-top{position:fixed;z-index:9998;right:20px;bottom:20px;width:42px;height:42px;border:1px solid #c7a33b;border-radius:13px;background:#f5c400;color:#29200b;font-size:22px;font-weight:800;box-shadow:0 8px 24px #0002;cursor:pointer;transition:transform .2s}
+.site-back-top:hover{transform:translateY(-3px)}
+.site-back-top[hidden]{display:none}
+body.dark .site-back-top{background:#d5a900;color:#211a0c}
+.site-header .site-theme-switch{margin-left:12px}
+@media(max-width:760px){.site-header .site-theme-switch{margin-left:auto;padding:5px 7px}.site-theme-label{display:none}.site-header{flex-wrap:wrap}}
+
+
+/* Accelerate My Education page-wide colour tokens and surfaces */
+body.dark{--background:#11100d;--surface:#1d1a14;--accent:#e4b51b;--text:#f7f1e6;--muted:#b6a98f}
+body.dark .site-header{background:#191711!important;border-bottom:1px solid #403625!important}
+body.dark .logo{color:#f7f1e6!important}
+body.dark .logo span{color:#e4b51b!important}
+body.dark .main-nav a{color:#d8cdb8!important}
+body.dark .hero{background:linear-gradient(135deg,#211d16,#17140f)!important;color:#f7f1e6!important}
+body.dark .hero h1,body.dark .hero h2{color:#fff8e9!important}
+body.dark .subjects,body.dark .about,body.dark .home-activities{background:#11100d!important;color:#f7f1e6!important}
+body.dark .subjects>p,body.dark .about p,body.dark .home-activities>p{color:#b6a98f!important}
+body.dark .subject-card,body.dark .home-activity-card,body.dark .choose-card{background:#1d1a14!important;color:#f7f1e6!important;border:1px solid #403625!important;box-shadow:0 10px 30px #0004}
+body.dark .subject-card h3,body.dark .home-activity-card h3,body.dark .choose-card h2{color:#fff8e9!important}
+body.dark .subject-card p,body.dark .home-activity-card p,body.dark .choose-card p{color:#b6a98f!important}
+body.dark .signin-page,body.dark .choose-main,body.dark .lesson-wrap{background:#11100d!important;color:#f7f1e6!important}
+body.dark .signin-card,body.dark .lesson-panel,body.dark .choose-card{background:#1d1a14!important;border-color:#403625!important;color:#f7f1e6!important}
+body.dark .signin-card h1,body.dark .lesson-wrap h1,body.dark .lesson-panel h2{color:#fff8e9!important}
+body.dark .signin-form label,body.dark .lesson-wrap p,body.dark .lesson-wrap li{color:#b6a98f!important}
+body.dark .signin-form input,body.dark .home-activity-dialog input{background:#211e18!important;color:#f7f1e6!important;border-color:#51452f!important}
+body.dark .lesson-example{background:#302817!important;color:#f7e8bf!important;border-color:#c49a23!important}
+body.dark .signin-footer,body.dark .choose-footer{background:#17140f!important;color:#b6a98f!important;border-color:#403625!important}
+body.dark .signin-home-link,body.dark .lesson-wrap a,body.dark .choose-footer a{color:#f0c74b!important}
+body.dark .home-activity-dialog{background:#1d1a14!important;color:#f7f1e6!important;border:1px solid #403625}
+body.dark .home-activity-dialog p{color:#b6a98f!important}
+body.dark .exit-game{background:#211d16!important;color:#ffe18a!important;border-color:#51452f!important}
+body.light .hero{background:linear-gradient(135deg,#fff4d5,#fffdfa)!important;color:#29232a!important}
+body.light .subjects,body.light .about,body.light .home-activities{background:#f7f3ed!important;color:#29232a!important}
+body.light .subject-card,body.light .home-activity-card,body.light .choose-card,body.light .lesson-panel,body.light .signin-card{background:#fffdfa!important;color:#29232a!important;border-color:#e2d8ce!important}
+body.light .subject-card h3,body.light .home-activity-card h3,body.light .choose-card h2,body.light .lesson-panel h2{color:#29232a!important}
+body.light .subject-card p,body.light .home-activity-card p,body.light .choose-card p{color:#776b73!important}
+body.light .signin-page,body.light .choose-main,body.light .lesson-wrap{background:#f7f3ed!important;color:#29232a!important}
+body.light .signin-footer,body.light .choose-footer{background:#fffdfa!important;color:#776b73!important}
+body.light .home-activity-dialog{background:#fffdfa!important;color:#29232a!important}
+body.light .home-activity-dialog p{color:#776b73!important}
+body.light .signin-form input,body.light .home-activity-dialog input{background:#fff!important;color:#29232a!important;border-color:#e2d8ce!important}
+body.light .lesson-example{background:#fff4d5!important;color:#463716!important}
+body.light .home-activity-card button{color:#29200b}
+.site-theme-switch{box-shadow:0 2px 8px #0000000d}
+body.dark .site-theme-switch{box-shadow:0 3px 12px #0004}
+@media(max-width:760px){.site-header .site-theme-switch{order:5}.site-header .main-nav{order:3}}
+
+
+body.player-page .site-theme-dock{left:16px;right:auto;top:14px}
+body.player-page .site-theme-switch{opacity:.98}
+
+/* Experience selection cards: keep them in sync with the active site theme. */
+body.dark .signin-choice{
+  background:#1d1a14!important;
+  color:#f7f1e6!important;
+  border-color:#403625!important;
+  box-shadow:0 8px 24px #0003;
+}
+body.dark .signin-choice strong{color:#fff8e9!important}
+body.dark .signin-choice span{color:#b6a98f!important}
+body.dark .signin-choice:hover{
+  background:#282319!important;
+  border-color:#c49a23!important;
+}
+body.light .signin-choice{
+  background:#fffdfa!important;
+  color:#29232a!important;
+  border-color:#e2d8ce!important;
+}
+body.light .signin-choice strong{color:#29232a!important}
+body.light .signin-choice span{color:#776b73!important}
+body.light .signin-choice:hover{
+  background:#fff8e9!important;
+  border-color:#d5a900!important;
+}
