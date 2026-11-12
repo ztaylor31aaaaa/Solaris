@@ -26,6 +26,42 @@ export default {
         return json({ sha: VERSION });
       }
 
+      if (url.pathname === "/api/wikipedia/page") {
+        if (request.method !== "GET") return new Response("GET required.", { status: 405 });
+        const title = (url.searchParams.get("title") || "").trim().slice(0, 240);
+        if (!title || !/^[\\p{L}\\p{N}_()%,' -]+$/u.test(title)) {
+          return new Response("Invalid article title.", { status: 400 });
+        }
+        try {
+          const upstreamUrl = "https://en.wikipedia.org/w/rest.php/v1/page/" + encodeURIComponent(title) + "/html";
+          const upstream = await fetch(upstreamUrl, {
+            headers: {
+              "Accept": "text/html; charset=utf-8",
+              "User-Agent": "SolarisEducation/1.0 (Wikipedia reader)"
+            },
+            cf: { cacheTtl: 900, cacheEverything: true }
+          });
+          if (!upstream.ok) {
+            return new Response("Wikipedia article returned " + upstream.status + ".", {
+              status: upstream.status === 404 ? 404 : 502,
+              headers: { "Content-Type": "text/plain; charset=utf-8" }
+            });
+          }
+          return new Response(await upstream.text(), {
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              "Cache-Control": "public, max-age=900",
+              "X-Content-Type-Options": "nosniff"
+            }
+          });
+        } catch {
+          return new Response("Could not contact Wikipedia.", {
+            status: 502,
+            headers: { "Content-Type": "text/plain; charset=utf-8" }
+          });
+        }
+      }
+
       if (url.pathname === "/api/ai/nim") {
         if (request.method !== "POST") return json({ error: { message: "POST required." } }, 405);
         if (request.headers.get("Sec-Fetch-Site") === "cross-site") {
@@ -90,6 +126,30 @@ export default {
       }
 
       return json({ error: "API route not found." }, 404);
+    }
+
+    if (url.pathname === "/owned-site" || url.pathname.startsWith("/owned-site/")) {
+      const sitePath = url.pathname.slice("/owned-site".length) || "/";
+      if (sitePath.includes("\\\\") || sitePath.split("/").some(part => part === "." || part === "..")) {
+        return new Response("Invalid site path.", { status: 400 });
+      }
+      const assetUrl = new URL(request.url);
+      assetUrl.pathname = sitePath;
+      const upstream = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
+      const headers = new Headers(upstream.headers);
+      const contentType = headers.get("Content-Type") || "";
+      if (!upstream.ok || !/text\\/html/i.test(contentType)) {
+        return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers });
+      }
+      let html = await upstream.text();
+      html = html.replace(/(\\b(?:href|src|action|poster)=["'])\\/(?!\\/)/gi, "$1/owned-site/");
+      html = html.replace(/<head(\\s[^>]*)?>/i, match => match + '<base href="/owned-site/">');
+      headers.delete("Content-Length");
+      headers.delete("Content-Security-Policy");
+      headers.delete("X-Frame-Options");
+      headers.set("Content-Type", "text/html; charset=utf-8");
+      headers.set("Cache-Control", "no-store");
+      return new Response(html, { status: upstream.status, headers });
     }
 
     return env.ASSETS.fetch(request);
