@@ -1101,7 +1101,7 @@ body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{an
 .startup-mark{width:54px;height:54px;display:block;object-fit:contain;border-radius:14px;filter:drop-shadow(0 8px 18px #ffc92835)}
 .startup-screen strong{font-size:17px}
 .startup-screen>span{font-size:11px;color:#b6a98f}
-.startup-track{width:min(220px,60vw);height:3px;border-radius:9px;overflow:hidden;background:#403625;margin-top:5px}
+.startup-skip{margin-top:12px;padding:9px 15px;border:1px solid #65532f;border-radius:9px;background:#201c14;color:#ffc928;font:600 12px Arial,Helvetica,sans-serif;cursor:pointer}.startup-skip:hover{background:#302719}.startup-track{width:min(220px,60vw);height:3px;border-radius:9px;overflow:hidden;background:#403625;margin-top:5px}
 .startup-track i{display:block;width:38%;height:100%;border-radius:9px;background:#ffc928;animation:startup-load 1.1s ease-in-out infinite alternate}
 @keyframes startup-load{from{transform:translateX(-10%)}to{transform:translateX(175%)}}
 
