@@ -1114,7 +1114,10 @@ body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{an
     width:100%!important;min-width:0!important;transition:none!important;
   }
   body:not(.nav-top):not(.nav-bottom) .main{
-    width:auto!important;max-width:none!important;min-width:0!important;margin:0!important;position:relative!important;
+    grid-column:2!important;
+    grid-row:1!important;
+    width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;position:relative!important;
+    justify-self:stretch!important;
   }
   body:not(.nav-top):not(.nav-bottom) .sidebar,
   body:not(.nav-top):not(.nav-bottom) .sidebar:hover,
