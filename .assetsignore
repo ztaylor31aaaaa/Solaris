@@ -1,0 +1,8 @@
+_worker.js
+wrangler.jsonc
+package.json
+package-lock.json
+README.md
+worker/
+.git/
+node_modules/
