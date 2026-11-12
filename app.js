@@ -4,6 +4,24 @@ let games=[],activeGame=null,currentView="home",playStarted=0,tick=null;
 let wikiTabs=[],activeWikiTab=null,webTabs=[],activeWebTab=null,appTabs=[],activeAppTab=null;const CATALOGUE="https://sme-library.global.ssl.fastly.net/data/games.json",CDN_ROOT="https://sme-library.global.ssl.fastly.net/";
 const defaults={theme:"dark",scale:"100",compact:false,motion:false,confirm:false,showDescriptions:true,animations:"full",accent:"#ffc928",navPosition:"sidebar",searchEngine:"google",libraryLayout:"grid",clock24:false,clockSeconds:true,density:"comfortable",background:"ambient",corners:"rounded",hoverEffects:true,pageTransitions:true,showStatus:true,temperature:0.4,responseStyle:"balanced",customInstructions:""};
 const get=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}},put=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+function importEdustarMigration(){
+ const match=location.hash.match(/(?:^#|&)solaris-migrate=([A-Za-z0-9_-]+)/);
+ if(!match)return;
+ try{
+  const token=match[1].replace(/-/g,"+").replace(/_/g,"/");
+  const binary=atob(token+"=".repeat((4-token.length%4)%4));
+  const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  const payload=JSON.parse(new TextDecoder().decode(bytes));
+  const allowed=["sunset_settings","sunset_favs","sunset_recent","sunset_library","sunset_stats","sunset_ai_chats"];
+  if(payload.version!==1||payload.source!=="edustar"||!payload.data||typeof payload.data!=="object")throw Error("This migration link is invalid.");
+  let imported=0;
+  for(const key of allowed){const value=payload.data[key];if(typeof value!=="string"||value.length>250000)continue;JSON.parse(value);localStorage.setItem(key,value);imported++;}
+  history.replaceState(null,"",location.pathname+location.search);
+  window.__solarisMigrationImported=imported;
+  window.addEventListener("DOMContentLoaded",()=>{if(typeof toast==="function")toast(imported?"Edustar data migrated successfully.":"No saved Edustar data was found to migrate.")},{once:true});
+ }catch(error){console.error("Solaris migration failed:",error);history.replaceState(null,"",location.pathname+location.search);window.addEventListener("DOMContentLoaded",()=>{if(typeof toast==="function")toast("Migration link could not be imported. Please try again from Edustar.")},{once:true});}
+}
+importEdustarMigration();
 const settings=()=>({...defaults,...get("sunset_settings",{})});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const list=k=>get(k,[]),favs=()=>list("sunset_favs"),recents=()=>list("sunset_recent");
