@@ -20,7 +20,6 @@ export default {
         if (request.method !== "GET") return json({ error: "GET required." }, 405);
         return json({ ok: true, service: "Solaris Worker", version: VERSION });
       }
-        if (!title || !/^[\p{L}\p{N}_()%,' -]+$/u.test(title)) {
       if (url.pathname === "/api/version") {
         if (request.method !== "GET") return json({ error: "GET required." }, 405);
         return json({ sha: VERSION });
@@ -29,7 +28,7 @@ export default {
       if (url.pathname === "/api/wikipedia/page") {
         if (request.method !== "GET") return new Response("GET required.", { status: 405 });
         const title = (url.searchParams.get("title") || "").trim().slice(0, 240);
-        if (!title || !/^[\\p{L}\\p{N}_()%,' -]+$/u.test(title)) {
+        if (!title || !/^[\p{L}\p{N}_()%,' -]+$/u.test(title)) {
           return new Response("Invalid article title.", { status: 400 });
         }
         try {
@@ -127,10 +126,9 @@ export default {
 
       return json({ error: "API route not found." }, 404);
     }
-      if (sitePath.includes("\\") || sitePath.split("/").some(part => part === "." || part === "..")) {
     if (url.pathname === "/owned-site" || url.pathname.startsWith("/owned-site/")) {
       const sitePath = url.pathname.slice("/owned-site".length) || "/";
-      if (sitePath.includes("\\\\") || sitePath.split("/").some(part => part === "." || part === "..")) {
+      if (sitePath.includes("\\") || sitePath.split("/").some(part => part === "." || part === "..")) {
         return new Response("Invalid site path.", { status: 400 });
       }
       const assetUrl = new URL(request.url);
@@ -143,7 +141,6 @@ export default {
       }
       html = html.replace(/(\b(?:href|src|action|poster)=["'])\/(?!\/)/gi, "$1/owned-site/");
       html = html.replace(/<head(\s[^>]*)?>/i, match => match + '<base href="/owned-site/">');
-      html = html.replace(/<head(\\s[^>]*)?>/i, match => match + '<base href="/owned-site/">');
       headers.delete("Content-Length");
       headers.delete("Content-Security-Policy");
       headers.delete("X-Frame-Options");
