@@ -169,7 +169,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#17140f26,transparent 48%),r
 .page:has(.sunset-home){width:min(1120px,calc(100% - 40px));padding-top:28px}
 .sunset-home{min-height:calc(100vh - 120px);display:flex;flex-direction:column;align-items:center}
 .home-brand-mark{margin:10px 0 27px;text-align:center;display:flex;flex-direction:column;align-items:center;animation:home-rise .6s both}
-.home-brand-mark>span{font-size:clamp(48px,7vw,76px);font-weight:800;letter-spacing:-5px;line-height:1;background:linear-gradient(110deg,#ffb7c7,#ff557e 55%,#ffc2a1);background-clip:text;-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 8px 26px #ff557e35)}
+.home-brand-mark>span{font-size:clamp(48px,7vw,76px);font-weight:800;letter-spacing:-2px;line-height:1.08;padding:0 5px 3px;background:linear-gradient(110deg,#ffb7c7,#ff557e 55%,#ffc2a1);background-clip:text;-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 8px 26px #ff557e35)}
 .home-brand-mark>b{font-size:12px;letter-spacing:4px;color:var(--muted);margin-top:7px}
 .home-brand-mark>small{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:13px}
 .home-search{width:min(720px,100%);height:58px;display:flex;align-items:center;gap:12px;padding:7px 9px 7px 19px;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 15px 45px #0003;animation:home-rise .65s both}
