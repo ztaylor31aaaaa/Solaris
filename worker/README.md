@@ -1,18 +1,33 @@
-# Backend adapter
+# Solaris Cloudflare Worker
 
-The Solaris frontend is designed to call same-origin API routes. This folder documents the expected interface; it does not contain a universal web proxy or the original Edustar site's private integrations.
+The active Worker implementation is at the repository root in `_worker.js`. Its configuration is in `wrangler.jsonc`.
 
-Implement these routes in your chosen server/Cloudflare Worker:
+## Current routes
 
-| Route | Purpose |
-| --- | --- |
-| `GET /api/search/google?q=` | Search results for the configured search view. |
-| `GET /api/search/wikipedia?q=` | Wikipedia search results. |
-| `GET /api/wikipedia/page?title=` | Retrieve a Wikipedia article. |
-| `GET /api/proxy/read?url=` | Readable preview for a URL you are authorised to access. |
-| `GET /api/version` | Return app version/update metadata. |
-| `POST /api/ai/nim` | Optional server-side AI provider adapter. |
+| Route | Method | Purpose |
+| --- | --- | --- |
+| `/api/health` | GET | Confirms that the Worker is running. |
+| `/api/version` | GET | Returns the app version marker. |
+| `/api/wikipedia/page?title=` | GET | Fetches a Wikipedia article for the built-in reader. |
+| `/api/ai/nim` | POST | Forwards chat requests to NVIDIA NIM using the key supplied in that request. |
+| `/owned-site/...` | GET | Serves this deployment's own static assets through the app's owned-site viewer. |
 
-Use strict hostname allowlists for any server-side fetching. Validate URLs, reject private-network and localhost destinations, limit response size and content types, apply timeouts and rate limits, and do not expose API keys to the browser.
+Unknown `/api/*` routes return a JSON 404. The Worker does not fetch arbitrary third-party URLs and is not an unrestricted web proxy.
 
-The original Edustar Worker is not copied because it contains site-specific feedback routing and developer-access functionality. Create a separate adapter for each deployment and keep credentials in host environment variables.
+## Deploy
+
+The Worker is named `solaris`. Connect this GitHub repository to that existing Worker using Cloudflare **Workers & Pages → solaris → Settings → Builds & deployments** (the exact dashboard labels may vary).
+
+Recommended build settings:
+- Root directory: `/`
+- Build command: `npm install`
+- Deploy command: `npx wrangler deploy`
+
+The Wrangler config points to `_worker.js` and serves the repository's frontend files as Static Assets. To deploy from a local checkout, run `npm install` followed by `npm run deploy`.
+
+## Security notes
+
+- Do not commit API keys, passwords or private secrets.
+- The AI route validates request size, message roles and same-origin requests.
+- The Worker only provides the owned-site asset route for this deployment; it does not proxy arbitrary websites.
+- Add any future external integration as a narrowly scoped route with input validation, response limits and rate limiting.
