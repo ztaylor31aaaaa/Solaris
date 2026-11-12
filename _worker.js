@@ -1,4 +1,4 @@
-const VERSION = "solaris-core-1";
+const VERSION = "solaris-core-2";
 
 function json(data, status = 200, headers = {}) {
   return Response.json(data, { status, headers: { "Cache-Control": "no-store", ...headers } });
@@ -15,6 +15,12 @@ export default {
 
     if (url.pathname.startsWith("/api/")) {
       if (!sameOrigin(request, url)) return json({ error: "Cross-origin requests are not allowed." }, 403);
+
+      if (url.pathname === "/api/presence") {
+        if (!["GET", "POST"].includes(request.method)) return json({ error: "GET or POST required." }, 405);
+        const id = env.PRESENCE.idFromName("solaris-global");
+        return env.PRESENCE.get(id).fetch(request);
+      }
 
       if (url.pathname === "/api/health") {
         if (request.method !== "GET") return json({ error: "GET required." }, 405);
@@ -152,3 +158,27 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+
+
+export class PresenceCounter {
+  constructor(state) { this.state = state; }
+  async fetch(request) {
+    const now = Date.now();
+    const visitors = (await this.state.storage.get("visitors")) || {};
+    for (const [id, seen] of Object.entries(visitors)) {
+      if (now - seen > 90000) delete visitors[id];
+    }
+    if (request.method === "POST") {
+      let body;
+      try { body = await request.json(); } catch { return Response.json({error:"Invalid JSON."},{status:400}); }
+      if (typeof body.id !== "string" || !/^[a-zA-Z0-9-]{12,80}$/.test(body.id)) {
+        return Response.json({error:"Invalid visitor ID."},{status:400});
+      }
+      visitors[body.id] = now;
+    }
+    await this.state.storage.put("visitors", visitors);
+    return Response.json({ online: Object.keys(visitors).length }, {
+      headers: { "Cache-Control": "no-store", "Access-Control-Allow-Origin": "null" }
+    });
+  }
+}
