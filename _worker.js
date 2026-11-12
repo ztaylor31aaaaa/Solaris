@@ -20,7 +20,7 @@ export default {
         if (request.method !== "GET") return json({ error: "GET required." }, 405);
         return json({ ok: true, service: "Solaris Worker", version: VERSION });
       }
-
+        if (!title || !/^[\p{L}\p{N}_()%,' -]+$/u.test(title)) {
       if (url.pathname === "/api/version") {
         if (request.method !== "GET") return json({ error: "GET required." }, 405);
         return json({ sha: VERSION });
@@ -127,7 +127,7 @@ export default {
 
       return json({ error: "API route not found." }, 404);
     }
-
+      if (sitePath.includes("\\") || sitePath.split("/").some(part => part === "." || part === "..")) {
     if (url.pathname === "/owned-site" || url.pathname.startsWith("/owned-site/")) {
       const sitePath = url.pathname.slice("/owned-site".length) || "/";
       if (sitePath.includes("\\\\") || sitePath.split("/").some(part => part === "." || part === "..")) {
@@ -138,11 +138,11 @@ export default {
       const upstream = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
       const headers = new Headers(upstream.headers);
       const contentType = headers.get("Content-Type") || "";
-      if (!upstream.ok || !/text\\/html/i.test(contentType)) {
+      if (!upstream.ok || !/text\/html/i.test(contentType)) {
         return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers });
       }
-      let html = await upstream.text();
-      html = html.replace(/(\\b(?:href|src|action|poster)=["'])\\/(?!\\/)/gi, "$1/owned-site/");
+      html = html.replace(/(\b(?:href|src|action|poster)=["'])\/(?!\/)/gi, "$1/owned-site/");
+      html = html.replace(/<head(\s[^>]*)?>/i, match => match + '<base href="/owned-site/">');
       html = html.replace(/<head(\\s[^>]*)?>/i, match => match + '<base href="/owned-site/">');
       headers.delete("Content-Length");
       headers.delete("Content-Security-Policy");
