@@ -966,3 +966,63 @@ body.nav-top .main:has(.proxy-reader),body.nav-bottom .main:has(.proxy-reader){w
   .main:has(.proxy-reader) .proxy-browser-stage,
   .main:has(.proxy-reader) .proxy-browser-frame{width:100%!important}
 }
+
+
+/* Solaris motion expansion + scoped search controls */
+.section-search-form,.ai-search-form{display:flex;align-items:center;gap:7px;min-width:0}
+.section-search-form{flex:1 1 280px}
+.section-search-form .field,.ai-search-form .field{flex:1;min-width:0}
+.ai-search-form{width:100%;margin:12px 0}
+.section-search-button{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border:0;border-radius:12px;background:var(--accent);color:#211600;font-size:25px;font-weight:800;cursor:pointer;box-shadow:0 5px 16px color-mix(in srgb,var(--accent) 24%,transparent);transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
+.section-search-button:hover{transform:translateY(-2px) scale(1.06);filter:brightness(1.08);box-shadow:0 9px 24px color-mix(in srgb,var(--accent) 35%,transparent)}
+.section-search-button:active{transform:scale(.94)}
+.ai-search-button{width:38px;height:38px;flex-basis:38px}
+@media(max-width:620px){.section-search-form{flex-basis:100%}.ai-search-form{gap:6px}}
+
+/* Expanded motion is only active when the user has not reduced animations. */
+@keyframes solarisPageEnter{from{opacity:0;transform:translateY(18px) scale(.99);filter:blur(4px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes solarisCardRise{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes solarisGlowPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 0%,transparent)}50%{box-shadow:0 0 28px 2px color-mix(in srgb,var(--accent) 15%,transparent)}}
+@keyframes solarisFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes solarisShimmer{0%{background-position:180% 0}100%{background-position:-180% 0}}
+@keyframes solarisIconBounce{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-4px) rotate(-8deg)}70%{transform:translateY(1px) rotate(5deg)}}
+@keyframes solarisToastIn{from{opacity:0;transform:translateX(28px) scale(.92)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes solarisModalIn{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes solarisTabIn{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes solarisAccentSweep{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes solarisSoftSpin{to{transform:rotate(360deg)}}
+
+@media(prefers-reduced-motion:no-preference){
+ body:not(.reduce-motion):not(.subtle-motion) .page:not([hidden]){animation:solarisPageEnter .48s cubic-bezier(.2,.75,.25,1) both}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card,
+ body:not(.reduce-motion):not(.subtle-motion) .feature-card,
+ body:not(.reduce-motion):not(.subtle-motion) .settings-card,
+ body:not(.reduce-motion):not(.subtle-motion) .changelog-entry{animation:solarisCardRise .55s cubic-bezier(.2,.75,.25,1) both}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card:nth-child(6n+1){animation-delay:.02s}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card:nth-child(6n+2){animation-delay:.06s}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card:nth-child(6n+3){animation-delay:.1s}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card:nth-child(6n+4){animation-delay:.14s}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card:nth-child(6n+5){animation-delay:.18s}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card:nth-child(6n){animation-delay:.22s}
+ body:not(.reduce-motion):not(.subtle-motion) .home-brand-mark{animation:solarisFloat 5s ease-in-out infinite}
+ body:not(.reduce-motion):not(.subtle-motion) .home-date-card{animation:solarisGlowPulse 4s ease-in-out infinite}
+ body:not(.reduce-motion):not(.subtle-motion) .home-shortcut:hover span{animation:solarisIconBounce .5s ease}
+ body:not(.reduce-motion):not(.subtle-motion) .nav-link:hover span{animation:solarisIconBounce .45s ease}
+ body:not(.reduce-motion):not(.subtle-motion) .button.primary,
+ body:not(.reduce-motion):not(.subtle-motion) .section-search-button{background-image:linear-gradient(110deg,var(--accent) 0%,color-mix(in srgb,var(--accent) 78%,white) 45%,var(--accent) 70%);background-size:220% 100%}
+ body:not(.reduce-motion):not(.subtle-motion) .button.primary:hover,
+ body:not(.reduce-motion):not(.subtle-motion) .section-search-button:hover{animation:solarisAccentSweep .8s ease}
+ body:not(.reduce-motion):not(.subtle-motion) .toast{animation:solarisToastIn .32s cubic-bezier(.2,.8,.2,1) both}
+ body:not(.reduce-motion):not(.subtle-motion) .modal{animation:solarisModalIn .3s cubic-bezier(.2,.8,.2,1) both}
+ body:not(.reduce-motion):not(.subtle-motion) .wiki-tab{animation:solarisTabIn .28s ease both}
+ body:not(.reduce-motion):not(.subtle-motion) .ai-message{animation:solarisCardRise .28s ease both}
+ body:not(.reduce-motion):not(.subtle-motion) .online-dot{animation:solarisGlowPulse 2.8s ease-in-out infinite}
+ body:not(.reduce-motion):not(.subtle-motion) .update-indicator:hover{animation:solarisFloat .65s ease-in-out}
+ body:not(.reduce-motion):not(.subtle-motion) .player-bar .live-dot{animation:solarisGlowPulse 1.8s ease-in-out infinite}
+ body:not(.reduce-motion):not(.subtle-motion) .game-image img{transition:transform .55s cubic-bezier(.2,.75,.25,1),filter .4s ease}
+ body:not(.reduce-motion):not(.subtle-motion) .game-card:hover .game-image img{transform:scale(1.09) rotate(-1deg);filter:saturate(1.16)}
+}
+body.subtle-motion .page:not([hidden]){animation:solarisPageEnter .22s ease both}
+body.subtle-motion .game-card,body.subtle-motion .feature-card,body.subtle-motion .settings-card{animation:solarisCardRise .25s ease both}
+body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{animation:none!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
