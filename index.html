@@ -46,6 +46,6 @@
     failure = "Unhandled promise rejection: " + String(e.reason && (e.reason.message || e.reason));
     if (!window.__sunsetBooted) recover();
   });
-  setTimeout(recover, 2500);
+  setTimeout(recover, 15000);
 })();
 </script></body></html>
