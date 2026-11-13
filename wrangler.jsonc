@@ -19,6 +19,12 @@
       ]
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "GAMES_BUCKET",
+      "bucket_name": "solaris-games"
+    }
+  ],
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
