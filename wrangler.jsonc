@@ -3,6 +3,7 @@
   "name": "solaris",
   "main": "./_worker.js",
   "compatibility_date": "2026-11-12",
+  "secrets": { "required": ["DEV_CODE"] },
   "durable_objects": { "bindings": [{ "name": "PRESENCE", "class_name": "PresenceCounter" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PresenceCounter"] }],
   "assets": {
