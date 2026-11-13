@@ -48,7 +48,7 @@ export default {
     if (url.pathname.startsWith("/api/developer/games")) {
       if (!sameOrigin(request, url)) return json({ error: "Cross-origin requests are not allowed." }, 403);
       const expected = env.GAME_UPLOAD_TOKEN || "";
-      const supplied = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
+      const supplied = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
       if (!expected || supplied.length !== expected.length || supplied !== expected) return json({ error: "Developer authentication failed." }, 401);
       if (request.method === "POST") {
         const length = Number(request.headers.get("Content-Length") || 0);
@@ -65,7 +65,7 @@ export default {
           const path = String(file.name || "").replace(/\\\\/g, "/").split("/").filter(Boolean).join("/");
           if (!path || path.split("/").some(part => part === "." || part === "..") || paths.has(path)) return json({ error: "A file path is invalid or duplicated." }, 400);
           paths.add(path); total += file.size;
-          if (/^(index|game)\\.html?$/i.test(path)) hasEntry = true;
+          if (/^(index|game)\.html?$/i.test(path)) hasEntry = true;
           if (total > 50 * 1024 * 1024) return json({ error: "Upload exceeds the 50 MB limit." }, 413);
         }
         if (!hasEntry) return json({ error: "Include an index.html or game.html entry file." }, 400);
@@ -74,7 +74,7 @@ export default {
           const path = String(file.name).replace(/\\\\/g, "/").split("/").filter(Boolean).join("/");
           await env.GAMES_BUCKET.put("games/" + id + "/" + path, file.stream(), { httpMetadata: { contentType: file.type || "application/octet-stream" } });
         }
-        const entry = paths.has("index.html") ? "index.html" : paths.has("game.html") ? "game.html" : [...paths].find(path => /\\.html?$/i.test(path));
+        const entry = paths.has("index.html") ? "index.html" : paths.has("game.html") ? "game.html" : [...paths].find(path => /\.html?$/i.test(path));
         const stored = await env.GAMES_BUCKET.get("games/index.json");
         let catalogue = [];
         if (stored) { try { catalogue = await stored.json(); } catch {} }
