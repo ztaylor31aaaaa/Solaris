@@ -1,4 +1,45 @@
-const VERSION = "solaris-core-2";
+const VERSION = "solaris-dev-gate-1";
+
+const DEV_COOKIE = "solaris_dev_access";
+const DEV_ACCESS_SECONDS = 7 * 24 * 60 * 60;
+
+function base64url(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+}
+
+async function devSignature(secret, payload) {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]
+  );
+  return { key, signature: await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload)) };
+}
+
+async function hasDevAccess(request, secret) {
+  if (!secret) return false;
+  const cookie = request.headers.get("Cookie") || "";
+  const match = cookie.match(new RegExp("(?:^|;\\s*)" + DEV_COOKIE + "=([A-Za-z0-9_.-]+)"));
+  if (!match) return false;
+  const [expiry, signature, extra] = match[1].split(".");
+  if (!expiry || !signature || extra || !/^\\d{10,}$/.test(expiry) || Number(expiry) < Math.floor(Date.now() / 1000)) return false;
+  try {
+    const key = await crypto.subtle.importKey(
+      "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]
+    );
+    const bytes = Uint8Array.from(atob(signature.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - signature.length % 4) % 4)), c => c.charCodeAt(0));
+    return await crypto.subtle.verify("HMAC", key, bytes, new TextEncoder().encode(expiry));
+  } catch { return false; }
+}
+
+function devLockPage(configured) {
+  const setup = configured ? "" : '<p class="hint">The site owner still needs to set the <code>DEV_CODE</code> Worker secret in Cloudflare before access can be enabled.</p>';
+  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffc928"><title>Solaris · Beta access</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0,#61400d55,transparent 55%),#11100d;color:#fff8e9;font-family:Arial,sans-serif}.card{width:min(420px,100%);padding:34px;border:1px solid #594728;border-radius:22px;background:#1d1a14;box-shadow:0 24px 80px #0008}.star{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#ffe78e,#ffad00);color:#342100;font-size:27px;font-weight:bold}.kicker{margin:24px 0 8px;color:#ffc928;font-size:10px;font-weight:bold;letter-spacing:2px}h1{margin:0;font-size:32px}p{color:#b6a98f;font-size:13px;line-height:1.6}.field{width:100%;padding:14px;border:1px solid #594a30;border-radius:10px;background:#11100d;color:#fff8e9;font-size:15px;outline:none}.field:focus{border-color:#ffc928;box-shadow:0 0 0 3px #ffc92822}button{width:100%;margin-top:12px;padding:14px;border:0;border-radius:10px;background:linear-gradient(130deg,#ffe47a,#ffb700);color:#342200;font-weight:800;font-size:13px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.error{min-height:20px;color:#ff9a82;font-size:12px}.hint{padding:10px;border-radius:9px;background:#302719;font-size:11px}.hint code{color:#ffe18a}</style></head><body><main class="card"><div class="star">✦</div><div class="kicker">PRIVATE BETA</div><h1>Solaris is locked</h1><p>Enter the developer access code to continue to the beta website.</p><form id="access"><input class="field" id="code" type="password" autocomplete="current-password" placeholder="Developer access code" required maxlength="200" autofocus><button id="submit" type="submit">Unlock Solaris</button><div class="error" id="error" role="alert"></div></form>${setup}</main><script>const form=document.getElementById("access"),input=document.getElementById("code"),button=document.getElementById("submit"),error=document.getElementById("error");form.addEventListener("submit",async e=>{e.preventDefault();button.disabled=true;error.textContent="Checking access…";try{const response=await fetch("/api/dev-access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:input.value})});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"That code was not accepted.");error.textContent="Access granted. Opening Solaris…";location.reload()}catch(err){error.textContent=err.message||"Could not verify the code. Try again.";input.select()}finally{button.disabled=false}});</script></body></html>`, {
+    status: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer" }
+  });
+}
+
 
 function json(data, status = 200, headers = {}) {
   return Response.json(data, { status, headers: { "Cache-Control": "no-store", ...headers } });
@@ -12,6 +53,33 @@ function sameOrigin(request, url) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // The beta code is held only as a Cloudflare Worker secret, never in client code.
+    if (url.pathname === "/api/dev-access") {
+      if (request.method !== "POST") return json({ error: "POST required." }, 405);
+      if (!sameOrigin(request, url)) return json({ error: "Cross-origin requests are not allowed." }, 403);
+      const secret = env.DEV_CODE;
+      if (!secret) return json({ error: "Beta access is not configured yet. The site owner must set the DEV_CODE Worker secret." }, 503);
+      const length = Number(request.headers.get("Content-Length") || 0);
+      if (length > 1000) return json({ error: "Request is too large." }, 413);
+      let data;
+      try { data = await request.json(); } catch { return json({ error: "Invalid request." }, 400); }
+      const supplied = typeof data.code === "string" ? data.code : "";
+      let difference = supplied.length ^ secret.length;
+      const max = Math.max(supplied.length, secret.length);
+      for (let i = 0; i < max; i++) difference |= (supplied.charCodeAt(i) || 0) ^ (secret.charCodeAt(i) || 0);
+      if (difference !== 0) return json({ error: "Incorrect developer code." }, 401);
+      const expiry = String(Math.floor(Date.now() / 1000) + DEV_ACCESS_SECONDS);
+      const signed = await devSignature(secret, expiry);
+      const signature = base64url(new Uint8Array(signed.signature));
+      return json({ ok: true }, 200, {
+        "Set-Cookie": DEV_COOKIE + "=" + expiry + "." + signature + "; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=" + DEV_ACCESS_SECONDS
+      });
+    }
+
+    if (!await hasDevAccess(request, env.DEV_CODE)) {
+      return devLockPage(Boolean(env.DEV_CODE));
+    }
 
     if (url.pathname.startsWith("/api/")) {
       if (!sameOrigin(request, url)) return json({ error: "Cross-origin requests are not allowed." }, 403);
