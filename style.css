@@ -1129,3 +1129,26 @@ body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{an
   body:not(.nav-top):not(.nav-bottom) .sidebar:focus-within{width:248px!important;min-width:248px!important}
   body:not(.nav-top):not(.nav-bottom) .player-shell{left:76px!important;right:0!important;top:68px!important;bottom:0!important}
 }
+
+/* Sidebar expansion motion and game toolkit */
+.sidebar{transition:width .38s cubic-bezier(.2,.8,.2,1),padding .32s ease,box-shadow .38s ease,background .25s ease}
+.sidebar:hover{width:248px}
+.nav-link{transition:width .34s cubic-bezier(.2,.8,.2,1),height .28s ease,margin .28s ease,padding .3s ease,background .22s ease,transform .28s ease,color .22s ease,font-size .25s ease,gap .28s ease}
+.nav-caption{transition:opacity .25s ease,height .28s ease,margin .28s ease,padding .28s ease}
+@keyframes toolkit-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.toolkit-panel,.toolkit-installed{padding:23px;border:1px solid var(--line);border-radius:18px;background:var(--panel);margin:0 0 20px;animation:toolkit-in .35s both}
+.toolkit-panel-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.toolkit-panel-head h2{margin:0 0 5px;font-size:17px}
+.toolkit-panel-head p,.toolkit-note{margin:0;color:var(--muted);font-size:11px;line-height:1.6}
+.toolkit-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#ffc92820;color:var(--accent);font-size:23px}
+.toolkit-upload-form{display:grid;gap:14px;max-width:650px}
+.toolkit-upload-form label{display:grid;gap:7px;font-size:11px;font-weight:700;color:var(--text)}
+.toolkit-upload-form .field{width:100%}
+.toolkit-note{margin:0 0 3px}
+.toolkit-game-list{display:grid;gap:9px}
+.toolkit-game-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.toolkit-game-row>div:first-child{min-width:0;display:grid;gap:5px}
+.toolkit-game-row strong{font-size:12px}
+.toolkit-game-row small{font-size:10px;color:var(--muted);overflow-wrap:anywhere}
+.toolkit-game-row>div:last-child{display:flex;gap:7px;flex-shrink:0}
+@media(max-width:720px){.toolkit-panel,.toolkit-installed{padding:16px}.toolkit-game-row{align-items:flex-start;flex-direction:column}.toolkit-game-row>div:last-child{width:100%}}
