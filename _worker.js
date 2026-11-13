@@ -14,6 +14,92 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    if (url.pathname === "/api/discord-presence") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405, { "Access-Control-Allow-Origin": "*" });
+      const id = env.PRESENCE.idFromName("solaris-global");
+      const response = await env.PRESENCE.get(id).fetch(new Request("https://presence.internal/"));
+      const data = await response.json();
+      const online = Number(data.online || 0);
+      return json({ online, status: "Currently " + online + " People online" }, 200, { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" });
+    }
+
+    if (url.pathname === "/api/shared-games") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405);
+      const object = await env.GAMES_BUCKET.get("games/index.json");
+      if (!object) return json([]);
+      try { return json(await object.json()); } catch { return json([]); }
+    }
+
+    if (url.pathname.startsWith("/shared-games/")) {
+      if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed.", { status: 405 });
+      const parts = url.pathname.slice("/shared-games/".length).split("/");
+      if (parts.length < 2 || parts.some(part => !part || part === "." || part === "..")) return new Response("Invalid game path.", { status: 400 });
+      let key;
+      try { key = "games/" + parts.map(decodeURIComponent).join("/"); } catch { return new Response("Invalid game path.", { status: 400 }); }
+      const object = await env.GAMES_BUCKET.get(key);
+      if (!object) return new Response("Game file not found.", { status: 404 });
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      headers.set("Cache-Control", "public, max-age=3600");
+      headers.set("X-Content-Type-Options", "nosniff");
+      return new Response(request.method === "HEAD" ? null : object.body, { headers });
+    }
+
+    if (url.pathname.startsWith("/api/developer/games")) {
+      if (!sameOrigin(request, url)) return json({ error: "Cross-origin requests are not allowed." }, 403);
+      const expected = env.GAME_UPLOAD_TOKEN || "";
+      const supplied = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
+      if (!expected || supplied.length !== expected.length || supplied !== expected) return json({ error: "Developer authentication failed." }, 401);
+      if (request.method === "POST") {
+        const length = Number(request.headers.get("Content-Length") || 0);
+        if (length > 50 * 1024 * 1024) return json({ error: "Upload exceeds the 50 MB limit." }, 413);
+        let form;
+        try { form = await request.formData(); } catch { return json({ error: "Invalid upload form." }, 400); }
+        const name = String(form.get("name") || "").trim().slice(0, 60);
+        const description = String(form.get("description") || "").trim().slice(0, 180);
+        const files = form.getAll("files").filter(file => file && typeof file.arrayBuffer === "function");
+        if (!name || !files.length || files.length > 500) return json({ error: "A game name and 1–500 files are required." }, 400);
+        let total = 0, hasEntry = false;
+        const paths = new Set();
+        for (const file of files) {
+          const path = String(file.name || "").replace(/\\\\/g, "/").split("/").filter(Boolean).join("/");
+          if (!path || path.split("/").some(part => part === "." || part === "..") || paths.has(path)) return json({ error: "A file path is invalid or duplicated." }, 400);
+          paths.add(path); total += file.size;
+          if (/^(index|game)\\.html?$/i.test(path)) hasEntry = true;
+          if (total > 50 * 1024 * 1024) return json({ error: "Upload exceeds the 50 MB limit." }, 413);
+        }
+        if (!hasEntry) return json({ error: "Include an index.html or game.html entry file." }, 400);
+        const id = crypto.randomUUID();
+        for (const file of files) {
+          const path = String(file.name).replace(/\\\\/g, "/").split("/").filter(Boolean).join("/");
+          await env.GAMES_BUCKET.put("games/" + id + "/" + path, file.stream(), { httpMetadata: { contentType: file.type || "application/octet-stream" } });
+        }
+        const entry = paths.has("index.html") ? "index.html" : paths.has("game.html") ? "game.html" : [...paths].find(path => /\\.html?$/i.test(path));
+        const stored = await env.GAMES_BUCKET.get("games/index.json");
+        let catalogue = [];
+        if (stored) { try { catalogue = await stored.json(); } catch {} }
+        const game = { id, name, description, category: "Community", entry, src: "/shared-games/" + id + "/" + entry, files: files.length, size: total, publishedAt: new Date().toISOString() };
+        catalogue.push(game);
+        await env.GAMES_BUCKET.put("games/index.json", JSON.stringify(catalogue), { httpMetadata: { contentType: "application/json; charset=utf-8" } });
+        return json({ ok: true, game });
+      }
+      if (request.method === "DELETE") {
+        let data;
+        try { data = await request.json(); } catch { return json({ error: "Invalid JSON." }, 400); }
+        const id = String(data.id || "");
+        if (!/^[a-f0-9-]{30,40}$/i.test(id)) return json({ error: "Invalid game ID." }, 400);
+        const listed = await env.GAMES_BUCKET.list({ prefix: "games/" + id + "/" });
+        if (listed.objects.length) await env.GAMES_BUCKET.delete(listed.objects.map(item => item.key));
+        const stored = await env.GAMES_BUCKET.get("games/index.json");
+        let catalogue = [];
+        if (stored) { try { catalogue = await stored.json(); } catch {} }
+        catalogue = catalogue.filter(item => item.id !== id);
+        await env.GAMES_BUCKET.put("games/index.json", JSON.stringify(catalogue), { httpMetadata: { contentType: "application/json; charset=utf-8" } });
+        return json({ ok: true });
+      }
+      return json({ error: "POST or DELETE required." }, 405);
+    }
+
     if (url.pathname.startsWith("/api/")) {
       if (!sameOrigin(request, url)) return json({ error: "Cross-origin requests are not allowed." }, 403);
 
