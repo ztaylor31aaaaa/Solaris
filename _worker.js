@@ -29,7 +29,7 @@ export default {
       }
       if (url.pathname === "/api/version") {
         if (request.method !== "GET") return json({ error: "GET required." }, 405);
-        return json({ sha: VERSION });
+        return json({ id: env.CF_VERSION_METADATA?.id || VERSION, tag: env.CF_VERSION_METADATA?.tag || "", timestamp: env.CF_VERSION_METADATA?.timestamp || "" });
       }
 
       if (url.pathname === "/api/wikipedia/page") {
@@ -156,7 +156,16 @@ export default {
       return new Response(html, { status: upstream.status, headers });
     }
 
-    return env.ASSETS.fetch(request);
+    const assetResponse = await env.ASSETS.fetch(request);
+    if ((url.pathname === "/" || url.pathname === "/index.html") && assetResponse.ok && (assetResponse.headers.get("Content-Type") || "").includes("text/html")) {
+      const versionId = env.CF_VERSION_METADATA?.id || VERSION;
+      const html = (await assetResponse.text()).replace(/<\/head>/i, '<script>window.__SOLARIS_BUILD_ID="' + versionId + '";</script></head>');
+      const headers = new Headers(assetResponse.headers);
+      headers.delete("Content-Length");
+      headers.set("Cache-Control", "no-store");
+      return new Response(html, { status: assetResponse.status, headers });
+    }
+    return assetResponse;
   }
 };
 
