@@ -6,7 +6,7 @@ const DEV_ACCESS_SECONDS = 7 * 24 * 60 * 60;
 function base64url(bytes) {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 async function devSignature(secret, payload) {
@@ -22,7 +22,7 @@ async function hasDevAccess(request, secret) {
   const match = cookie.match(new RegExp("(?:^|;\\s*)" + DEV_COOKIE + "=([A-Za-z0-9_.-]+)"));
   if (!match) return false;
   const [expiry, signature, extra] = match[1].split(".");
-  if (!expiry || !signature || extra || !/^\\d{10,}$/.test(expiry) || Number(expiry) < Math.floor(Date.now() / 1000)) return false;
+  if (!expiry || !signature || extra || !/^\d{10,}$/.test(expiry) || Number(expiry) < Math.floor(Date.now() / 1000)) return false;
   try {
     const key = await crypto.subtle.importKey(
       "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]
