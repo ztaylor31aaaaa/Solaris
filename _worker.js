@@ -14,6 +14,60 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // Public read-only API for Discord bots and other integrations.
+    const publicApiHeaders = { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" };
+    const getOnlineCount = async () => {
+      const id = env.PRESENCE.idFromName("solaris-global");
+      const response = await env.PRESENCE.get(id).fetch(new Request("https://presence.internal/"));
+      const data = await response.json();
+      return Number(data.online || 0);
+    };
+    const getSharedGames = async () => {
+      try {
+        const object = await env.GAMES_BUCKET.get("games/index.json");
+        if (!object) return [];
+        const data = await object.json();
+        return Array.isArray(data) ? data : [];
+      } catch { return []; }
+    };
+    if (url.pathname === "/api" || url.pathname === "/api/") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405, publicApiHeaders);
+      return json({
+        name: "Solaris API",
+        endpoints: {
+          status: "GET /api/status",
+          health: "GET /api/health",
+          version: "GET /api/version",
+          online: "GET /api/discord-presence",
+          stats: "GET /api/stats",
+          games: "GET /api/games",
+          sharedGames: "GET /api/shared-games"
+        }
+      }, 200, publicApiHeaders);
+    }
+    if (url.pathname === "/api/health") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405, publicApiHeaders);
+      return json({ ok: true, status: "healthy", service: "Solaris" }, 200, publicApiHeaders);
+    }
+    if (url.pathname === "/api/version") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405, publicApiHeaders);
+      return json({ service: "Solaris", version: VERSION, buildId: env.CF_VERSION_METADATA?.id || null }, 200, publicApiHeaders);
+    }
+    if (url.pathname === "/api/status") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405, publicApiHeaders);
+      const online = await getOnlineCount();
+      return json({ service: "Solaris", status: "online", online, version: VERSION, buildId: env.CF_VERSION_METADATA?.id || null, checkedAt: new Date().toISOString() }, 200, publicApiHeaders);
+    }
+    if (url.pathname === "/api/games") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405, publicApiHeaders);
+      return json(await getSharedGames(), 200, publicApiHeaders);
+    }
+    if (url.pathname === "/api/stats") {
+      if (request.method !== "GET") return json({ error: "GET required." }, 405, publicApiHeaders);
+      const [online, games] = await Promise.all([getOnlineCount(), getSharedGames()]);
+      return json({ service: "Solaris", online, sharedGames: games.length, version: VERSION, buildId: env.CF_VERSION_METADATA?.id || null, checkedAt: new Date().toISOString() }, 200, publicApiHeaders);
+    }
+
     if (url.pathname === "/api/discord-presence") {
       if (request.method !== "GET") return json({ error: "GET required." }, 405, { "Access-Control-Allow-Origin": "*" });
       const id = env.PRESENCE.idFromName("solaris-global");
