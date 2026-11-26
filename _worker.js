@@ -93,7 +93,9 @@ export default {
       headers.set("Content-Type", mime[extension] || upstream.headers.get("Content-Type") || "application/octet-stream");
       headers.set("Cache-Control", key === "catalogue.json" ? "no-cache" : "public, max-age=300");
       headers.set("X-Content-Type-Options", "nosniff");
-      headers.set("Cross-Origin-Resource-Policy", "same-origin");
+      headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+      headers.set("Access-Control-Allow-Origin", "*");
+      headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
       return new Response(request.method === "HEAD" ? null : upstream.body, { status: upstream.status, headers });
     }
     if (url.pathname === "/api/shared-games") {
