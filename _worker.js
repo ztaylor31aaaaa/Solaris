@@ -77,6 +77,25 @@ export default {
       return json({ online, status: "Currently " + online + " People online" }, 200, { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" });
     }
 
+    // Read-only same-origin delivery for the Polaris Games catalogue and its static game files.
+    if (url.pathname.startsWith("/polaris-games/")) {
+      if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed.", { status: 405 });
+      let parts;
+      try { parts = url.pathname.slice("/polaris-games/".length).split("/").map(decodeURIComponent); } catch { return new Response("Invalid asset path.", { status: 400 }); }
+      if (!parts.length || parts.some(part => !part || part === "." || part === ".." || part.includes("/") || part.includes("\\"))) return new Response("Invalid asset path.", { status: 400 });
+      const key = parts.join("/");
+      if (!(key === "catalogue.json" || /^games\/[a-z0-9_-]+\/[a-z0-9._/-]+$/i.test(key)) || key.split("/").some(part => part === "." || part === "..")) return new Response("Asset not found.", { status: 404 });
+      const upstream = await fetch("https://raw.githubusercontent.com/ztaylor31aaaaa/Polaris-Games/main/" + key.split("/").map(encodeURIComponent).join("/"), { headers: { "Accept": "*/*" }, cf: { cacheTtl: key === "catalogue.json" ? 30 : 300, cacheEverything: true } });
+      if (!upstream.ok) return new Response(upstream.status === 404 ? "Game asset not found." : "Polaris Games asset unavailable.", { status: upstream.status });
+      const extension = key.split(".").pop().toLowerCase();
+      const mime = { html:"text/html; charset=utf-8",htm:"text/html; charset=utf-8",js:"text/javascript; charset=utf-8",mjs:"text/javascript; charset=utf-8",css:"text/css; charset=utf-8",json:"application/json; charset=utf-8",svg:"image/svg+xml",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",webp:"image/webp",gif:"image/gif",avif:"image/avif",wasm:"application/wasm",woff:"font/woff",woff2:"font/woff2",ttf:"font/ttf",otf:"font/otf",mp3:"audio/mpeg",ogg:"audio/ogg",wav:"audio/wav",mp4:"video/mp4",webm:"video/webm",glb:"model/gltf-binary",gltf:"model/gltf+json" };
+      const headers = new Headers(upstream.headers);
+      headers.set("Content-Type", mime[extension] || upstream.headers.get("Content-Type") || "application/octet-stream");
+      headers.set("Cache-Control", key === "catalogue.json" ? "no-cache" : "public, max-age=300");
+      headers.set("X-Content-Type-Options", "nosniff");
+      headers.set("Cross-Origin-Resource-Policy", "same-origin");
+      return new Response(request.method === "HEAD" ? null : upstream.body, { status: upstream.status, headers });
+    }
     if (url.pathname === "/api/shared-games") {
       if (request.method !== "GET") return json({ error: "GET required." }, 405);
       const object = await env.GAMES_BUCKET.get("games/index.json");
