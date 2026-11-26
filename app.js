@@ -30,18 +30,26 @@ const list=k=>get(k,[]),favs=()=>list("sunset_favs"),recents=()=>list("sunset_re
 
 const savedLibrary=list("sunset_library").filter(id=>id!=="spaceflight-simulator");put("sunset_library",savedLibrary);
 const POLARIS_GAMES_ROOT="/polaris-games/";
+const POLARIS_GAMES_RAW_ROOT="https://raw.githubusercontent.com/ztaylor31aaaaa/Polaris-Games/main/";
 async function loadPolarisGames(){
- try{
-  const response=await fetch(POLARIS_GAMES_ROOT+"catalogue.json",{cache:"no-store"});
-  if(!response.ok)throw Error("Polaris Games catalogue returned HTTP "+response.status);
-  const rows=await response.json();if(!Array.isArray(rows))throw Error("Polaris Games catalogue is invalid");
-  const imported=rows.filter(g=>g&&typeof g.id==="string"&&/^[a-z0-9][a-z0-9_-]{0,63}$/i.test(g.id)&&typeof g.name==="string"&&typeof g.src==="string"&&/^games\/[a-z0-9._/-]+\.html?$/i.test(g.src)&&!g.src.split("/").some(part=>!part||part==="."||part==="..")).map(g=>({
-   id:"polaris-games-"+g.id,polarisGameId:g.id,name:String(g.name).slice(0,100),description:String(g.description||"A game from Polaris Games.").slice(0,300),category:("Polaris Games · "+String(g.category||"Game")).slice(0,50),
-   src:POLARIS_GAMES_ROOT+g.src.split("/").map(encodeURIComponent).join("/"),image:g.image?POLARIS_GAMES_ROOT+String(g.image).split("/").map(encodeURIComponent).join("/"):"",shared:true,polarisGames:true,source:"Polaris Games"
-  }));
-  for(const game of imported){const index=games.findIndex(x=>x.id===game.id);if(index>=0)games[index]=game;else games.push(game)}
-  return imported.length;
- }catch(error){console.warn("Polaris Games catalogue unavailable:",error);return 0}
+ const sources=[POLARIS_GAMES_ROOT,POLARIS_GAMES_RAW_ROOT];
+ let lastError=null;
+ for(const root of sources){
+  try{
+   const response=await fetch(root+"catalogue.json",{cache:"no-store",signal:AbortSignal.timeout(10000)});
+   if(!response.ok)throw Error("Polaris Games catalogue returned HTTP "+response.status+" from "+root);
+   const rows=await response.json();if(!Array.isArray(rows))throw Error("Polaris Games catalogue is invalid");
+   const imported=rows.filter(g=>g&&typeof g.id==="string"&&/^[a-z0-9][a-z0-9_-]{0,63}$/i.test(g.id)&&typeof g.name==="string"&&typeof g.src==="string"&&/^games\/[a-z0-9._/-]+\.html?$/i.test(g.src)&&!g.src.split("/").some(part=>!part||part==="."||part==="..")&&(!g.image||typeof g.image==="string"&&!g.image.split("/").some(part=>!part||part==="."||part===".."))).map(g=>({
+    id:"polaris-games-"+g.id,polarisGameId:g.id,name:String(g.name).slice(0,100),description:String(g.description||"A game from Polaris Games.").slice(0,300),category:("Polaris Games · "+String(g.category||"Game")).slice(0,50),
+    src:root+g.src.split("/").map(encodeURIComponent).join("/"),image:g.image?root+g.image.split("/").map(encodeURIComponent).join("/"):"",shared:true,polarisGames:true,source:"Polaris Games"
+   }));
+   for(const game of imported){const index=games.findIndex(x=>x.id===game.id);if(index>=0)games[index]=game;else games.push(game)}
+   console.info("Solaris: loaded "+imported.length+" Polaris Games entries from "+root);
+   return imported.length;
+  }catch(error){lastError=error;console.warn("Polaris Games source failed:",root,error)}
+ }
+ console.error("Solaris: all Polaris Games catalogue sources failed.",lastError);
+ return 0;
 }
 async function loadSharedGames(){try{const r=await fetch("/api/shared-games",{cache:"no-store"});if(!r.ok)throw Error("Shared catalogue unavailable");const rows=await r.json();for(const g of rows){if(g&&g.id&&g.src&&!games.some(x=>x.id==="shared-"+g.id))games.push({id:"shared-"+g.id,sharedId:g.id,name:String(g.name||"Community game"),description:String(g.description||"Community-published game."),src:g.src,image:"",category:"Community",shared:true})}}catch(e){console.warn("Community games unavailable:",e)}}
 function developerToken(){return sessionStorage.getItem("solaris_game_upload_token")||""}
@@ -206,7 +214,7 @@ function minimise(){document.body.classList.remove("game-active");shell.hidden=t
 function restore(){if(activeSessionId)activateSession(activeSessionId);}
 function showModal(t,h,buttons){body.innerHTML='<h2 id="modal-title">'+esc(t)+'</h2>'+h;footer.innerHTML="";buttons.forEach(x=>{const b=document.createElement("button");b.className="button "+(x.primary?"primary":"secondary");b.textContent=x.label;b.onclick=x.run||closeModal;footer.append(b)});modal.hidden=false}
 function closeModal(){modal.hidden=true}
-async function load(){$("#catalogue-status").textContent="Connecting to game catalogue…";try{const response=await fetch(CATALOGUE,{cache:"no-store",signal:AbortSignal.timeout(12000)});if(!response.ok)throw Error("Catalogue request failed: "+response.status);const data=await response.json();if(!Array.isArray(data))throw Error("Catalogue format was not recognised");games=data.map((g,i)=>({id:String(g.id??i),name:String(g.name||"Untitled game"),description:String(g.description||g.desc||"Open this game."),src:safeSrc(g.src||g.url),image:safeImage(g.image||g.icon),category:String(g.category||g.type||"Game"),isolated:g.isolated||false})).filter(g=>g.name&&g.src);await Promise.all([loadSharedGames(),loadPolarisGames()]);await appendCustomGames();$("#game-count").textContent=games.length;$("#catalogue-status").textContent="Preloading game artwork in background…";preloadGameImages(games).then(()=>{$("#catalogue-status").textContent=games.length+" games available"}).catch(error=>console.warn("Game artwork preload incomplete:",error));pageRender()}catch(error){games=[];await loadSharedGames();await appendCustomGames();$("#game-count").textContent=games.length;$("#catalogue-status").textContent=games.length?games.length+" local games · catalogue unavailable":"Catalogue unavailable";pageRender();console.error("Solaris catalogue error:",error);toast("Could not load the Snubby game catalogue. Check your connection and reload.")}}
+async function load(){ $("#catalogue-status").textContent="Connecting to game catalogue…";let catalogueError=null;try{const response=await fetch(CATALOGUE,{cache:"no-store",signal:AbortSignal.timeout(12000)});if(!response.ok)throw Error("Catalogue request failed: "+response.status);const data=await response.json();if(!Array.isArray(data))throw Error("Catalogue format was not recognised");games=data.map((g,i)=>({id:String(g.id??i),name:String(g.name||"Untitled game"),description:String(g.description||g.desc||"Open this game."),src:safeSrc(g.src||g.url),image:safeImage(g.image||g.icon),category:String(g.category||g.type||"Game"),isolated:g.isolated||false})).filter(g=>g.name&&g.src)}catch(error){catalogueError=error;games=[];console.error("Solaris main game catalogue unavailable:",error)}await Promise.all([loadSharedGames(),loadPolarisGames()]);await appendCustomGames();$("#game-count").textContent=games.length;const polarisCount=games.filter(g=>g.polarisGames).length;$("#catalogue-status").textContent=polarisCount+" Polaris Games · "+games.length+" total games";preloadGameImages(games).catch(error=>console.warn("Game artwork preload incomplete:",error));pageRender();if(catalogueError&&!games.length)toast("Game catalogues could not be reached. Check your connection and reload.")}
 const aiSession={history:[],activeChatId:null,attachments:[]};
 function aiChats(){return get("sunset_ai_chats",[])}
 function saveAIChat(){const chats=aiChats();let chat=chats.find(x=>x.id===aiSession.activeChatId);if(!chat){chat={id:aiSession.activeChatId||("chat-"+Date.now()),title:"New chat",messages:[],updated:Date.now()};aiSession.activeChatId=chat.id;chats.unshift(chat)}chat.messages=aiSession.history.slice(-200);chat.updated=Date.now();chats.sort((x,y)=>y.updated-x.updated);put("sunset_ai_chats",chats.slice(0,30))}
