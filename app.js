@@ -36,7 +36,7 @@ async function loadPolarisGames(){
   if(!response.ok)throw Error("Polaris Games catalogue returned HTTP "+response.status);
   const rows=await response.json();if(!Array.isArray(rows))throw Error("Polaris Games catalogue is invalid");
   const imported=rows.filter(g=>g&&typeof g.id==="string"&&/^[a-z0-9][a-z0-9_-]{0,63}$/i.test(g.id)&&typeof g.name==="string"&&typeof g.src==="string"&&/^games\/[a-z0-9._/-]+\.html?$/i.test(g.src)&&!g.src.split("/").some(part=>!part||part==="."||part==="..")).map(g=>({
-   id:"polaris-games-"+g.id,polarisGameId:g.id,name:String(g.name).slice(0,100),description:String(g.description||"A game from Polaris Games.").slice(0,300),category:String(g.category||"Polaris Games").slice(0,50),
+   id:"polaris-games-"+g.id,polarisGameId:g.id,name:String(g.name).slice(0,100),description:String(g.description||"A game from Polaris Games.").slice(0,300),category:("Polaris Games · "+String(g.category||"Game")).slice(0,50),
    src:POLARIS_GAMES_ROOT+g.src.split("/").map(encodeURIComponent).join("/"),image:g.image?POLARIS_GAMES_ROOT+String(g.image).split("/").map(encodeURIComponent).join("/"):"",shared:true,polarisGames:true,source:"Polaris Games"
   }));
   for(const game of imported){const index=games.findIndex(x=>x.id===game.id);if(index>=0)games[index]=game;else games.push(game)}
